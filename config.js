@@ -26,6 +26,7 @@ var currentEnv = process.env.NODE_ENV || 'development',
 			password: 'changeme'
 		},
 		database: {
+			host: 'localhost',
 			username: 'root',
 			password: 'password',
 			name: 'mystatus'

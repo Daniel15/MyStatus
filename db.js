@@ -27,7 +27,7 @@ var extraClassMethods = {
 					// If it's a duplicate key exception, a record with the same record was probably inserted
 					// at exactly the same time, after the check above but before the insert (race condition /
 					// threading issue). Just loop around again and re-run the update.
-					if (error.code == 'ER_DUP_ENTRY') {
+					if (error.code === 'ER_DUP_ENTRY') {
 						self.createOrUpdate(whereProperties, params);
 						return;
 					}
@@ -44,6 +44,7 @@ var extraClassMethods = {
 
 // Initialise Sequelize
 var seq = new Sequelize(config.database.name, config.database.username, config.database.password, {
+	host: config.database.host,
 	logging: false,
 	define: {
 		charset: 'utf8',
