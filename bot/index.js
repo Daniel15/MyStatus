@@ -50,7 +50,8 @@ exports.start = function() {
 	log.info('Connecting using ' + config.xmpp.username);
 	xmpp.connect({
 		jid: config.xmpp.username,
-		password: config.xmpp.password
+		password: config.xmpp.password,
+		reconnect: true
 	});
 
 	// check for incoming subscription requests
