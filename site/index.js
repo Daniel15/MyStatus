@@ -4,6 +4,7 @@
 'use strict';
 
 var express = require('express'),
+	expressValidator = require('express-validator'),
 	http = require('http'),
 	path = require('path'),
 	config = require('../config'),
@@ -36,6 +37,7 @@ site.configure(function(){
 
 	site.use(express.bodyParser());
 	site.use(express.methodOverride());
+	site.use(expressValidator);
 	site.use(site.router);
 	site.use(express.static(path.join(__dirname, 'public')));
 });
@@ -45,7 +47,7 @@ site.configure('development', function(){
 });
 
 // Add all the controllers
-['index', 'status'].forEach(function(controllerName) {
+['index', 'status', 'account'].forEach(function(controllerName) {
 	require('./controllers/' + controllerName)(site);
 });
 

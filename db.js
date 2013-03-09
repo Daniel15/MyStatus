@@ -45,7 +45,11 @@ var extraClassMethods = {
 // Initialise Sequelize
 var seq = new Sequelize(config.database.name, config.database.username, config.database.password, {
 	host: config.database.host,
-	logging: false,
+	// Enable logging in development
+	logging: config.env.development
+		? function(message) { require(__dirname + '/log').info(message); }
+		: false,
+
 	define: {
 		charset: 'utf8',
 		collate: 'utf8_general_ci',
@@ -56,10 +60,48 @@ var seq = new Sequelize(config.database.name, config.database.username, config.d
 // Models
 module.exports = {
 	Account: seq.define('Account', {
-		jid: { type: Sequelize.STRING, unique: true },
-		username: { type: Sequelize.STRING, unique: true },
+		jid: {
+			type: Sequelize.STRING,
+			unique: true,
+			allowNull: false,
+			validate: {
+				isEmail: true
+			}
+		},
+		username: {
+			type: Sequelize.STRING,
+			unique: true,
+			validate: {
+				is: {
+					args: /^[a-zA-Z0-9_\-]+$/i,
+					msg: 'That username is invalid'
+				}
+			}
+		},
 		state: Sequelize.STRING,
-		statusText: Sequelize.STRING
+		statusText: Sequelize.STRING,
+		accountCode: Sequelize.STRING
+	}, {
+		instanceMethods: {
+			/**
+			 * Gets a user-friendly version of the state (eg. Online or Busy)
+			 * @returns {string} User-friendly state
+			 */
+			getFriendlyState: function() {
+				switch (this.state) {
+					case 'online':
+						return 'Online';
+					case 'dnd':
+						return 'Busy';
+					case 'away':
+						return 'Away';
+					case 'offline':
+						return 'Offline';
+					default:
+						return 'Unknown [' + this.state + ']';
+				}
+			}
+		}
 	})
 };
 

@@ -4,6 +4,7 @@
 'use strict';
 
 var xmpp = require('simple-xmpp'),
+	crypto = require('crypto'),
 	config = require('./../config'),
 	db = require('./../db'),
 	log = require('./../log');
@@ -37,10 +38,12 @@ xmpp.on('buddy', function(jid, state, statusText) {
 });
 
 xmpp.on('subscribe', function(from) {
-	// Accept all subscriptions
+	// Accept the subscription
 	log.info('Accepting subscribe request from ' + from);
 	xmpp.acceptSubscription(from);
 	xmpp.subscribe(from);
+
+	exports.sendRegistrationMessage(from);
 });
 
 /**
@@ -56,4 +59,35 @@ exports.start = function() {
 
 	// check for incoming subscription requests
 	xmpp.getRoster();
+};
+
+/**
+ * Send the registration message to the specified contact, so they can finish their registration
+ * @param jid Jabber ID of the user
+ * @param accountCode Account code for accessing their account
+ */
+exports.sendRegistrationMessage = function(jid, accountCode) {
+	// Generate an account code for verification
+	crypto.randomBytes(28, function(ex, buf) {
+		// Only replace the account code if we didn't already have one
+		if (!accountCode) {
+			accountCode = buf.toString('hex');
+			db.Account.createOrUpdate(['jid'], {
+				jid: jid,
+				accountCode: accountCode
+			});
+		}
+
+		log.info('Sending registration message to ' + jid);
+		xmpp.send(jid, 'Please go to this URL to complete your MyStatus registration: ' + config.site.baseUrl + 'account/' + accountCode);
+	});
+};
+
+/**
+ * Add the specified Jabber ID as a contact
+ * @param jid Jabber ID
+ */
+exports.addContact = function(jid) {
+	log.info('Adding ' + jid + ' as contact');
+	xmpp.subscribe(jid);
 };

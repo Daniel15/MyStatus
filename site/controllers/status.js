@@ -6,6 +6,9 @@ var db = require('../../db'),
 	log = require('../../log');
 
 module.exports = function(app) {
+	/**
+	 * JSON feed for the specified user's status.
+	 */
 	app.get('/:username.json', function(req, res) {
 		var username = req.params.username;
 		db.Account.find({ where: { username: username }}).success(function (account) {
@@ -19,7 +22,7 @@ module.exports = function(app) {
 			res.set({
 				'Last-Modified': account.updatedAt
 			}).jsonp({
-				state: account.state,
+				state: account.getFriendlyState(),
 				statusText: account.statusText,
 				createdAt: account.createdAt,
 				updatedAt: account.updatedAt

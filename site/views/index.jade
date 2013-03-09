@@ -2,4 +2,20 @@ extends layout
 
 block content
 	h1 MyStatus
-	p Coming soon!
+	p
+		| MyStatus allows you to display your XMPP / Google Talk status (such as Online or Busy) and status message on your
+		| website, blog, or forum signature. It provides this data in JSON format so developers can use it easily :)
+	p
+		| This site is currently under construction and is not yet finished. It is still VERY rough around the edges.
+		| If you'd like to try out the alpha version, see the registration form below. Please let me know if you 
+		| encounter any issues!
+
+	h1 Getting Started
+	form(action="/account/register", method="post")
+		label(for="jid") Enter your Jabber/XMPP ID (eg. example@jabber.org) or your GMail address (eg. example@gmail.com) to get started:
+		br
+		input(id="jid", name="jid", type="text", placeholder="example@jabber.org or example@gmail.com")
+		input(type="submit", value="Register")
+
+	p By&nbsp;
+		a(href="http://dan.cx/") Daniel15
