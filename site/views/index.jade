@@ -11,11 +11,10 @@ block content
 		| encounter any issues!
 
 	h1 Getting Started
-	form(action="/account/register", method="post")
-		label(for="jid") Enter your Jabber/XMPP ID (eg. example@jabber.org) or your GMail address (eg. example@gmail.com) to get started:
-		br
-		input(id="jid", name="jid", type="text", placeholder="example@jabber.org or example@gmail.com")
-		input(type="submit", value="Register")
+	p
+		| To get started with MyStatus, please add 
+		strong #{botJid} 
+		| to your XMPP or Google Talk contacts. You will receive a chat message with a link to complete the registration.
 
 	p By&nbsp;
 		a(href="http://dan.cx/") Daniel15

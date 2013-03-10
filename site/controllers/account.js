@@ -4,46 +4,11 @@
 'use strict';
 
 var util = require('util'),
-	bot = require('../../bot'),
 	config = require('../../config'),
 	db = require('../../db'),
 	log = require('../../log');
 
 module.exports = function(site) {
-	/**
-	 * POST to register as a new user
-	 */
-	site.post('/account/register', function(req, res) {		
-		req.assert('jid', 'Invalid Jabber ID').isEmail();
-		var errors = req.validationErrors();
-		if (errors) {
-			// TODO: Display error message nicely
-			res.send('Validation errors: ' + util.inspect(errors));
-			return;
-		}
-
-		var jid = req.param('jid');
-
-		// Check if this user has already registered and they're in the database
-		db.Account.find({ where: { jid: jid }}).success(function (account) {
-			// See if they already have an account code
-			if (account) {
-				// Already in the database, so assume they're on the contact list
-				// Just send the message directly
-				bot.sendRegistrationMessage(account.jid, account.accountCode);
-			} else {
-				// Not in the database, so assume they're not a contact yet
-				// Add them as a contact - The bot will send the registration message once they accept
-				bot.addContact(jid);
-			}
-		});
-
-		res.render('account/registered', {
-			title: 'Registered',
-			botJid: config.xmpp.username
-		});
-	});
-
 	/**
 	 * GET for the main account page
 	 */
