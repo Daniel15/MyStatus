@@ -2,10 +2,45 @@
  * REST controller handling output of the status data.
  */
 'use strict';
-var db = require('../../db'),
+var config = require('../../config'),
+	db = require('../../db'),
 	log = require('../../log');
 
-module.exports = function(app) {
+var cacheMins = 1;
+
+function getIconPath(state) {
+	var icon = 'offline';
+
+	//noinspection FallthroughInSwitchStatementJS
+	switch (state) {
+		case 'online':
+		case 'chat':
+			icon = 'online';
+			break;
+		case 'dnd':
+			icon = 'busy';
+			break;
+		case 'away':
+		case 'xa':
+			icon = 'away';
+			break;
+	}
+	
+	return 'images/icons/' + icon + '.png';
+}
+
+function getIconUrl(state) {
+	return config.site.baseUrl + getIconPath(state);
+}
+
+function setCacheHeaders(account, res) {
+	res.set({
+		'Last-Modified': account ? account.updatedAt : new Date(),
+		'Expires': new Date(Date.now() + (cacheMins * 60 * 1000))
+	});
+}
+
+module.exports = function(app) {	
 	/**
 	 * JSON feed for the specified user's status.
 	 */
@@ -19,13 +54,26 @@ module.exports = function(app) {
 				return;
 			}
 
-			res.set({
-				'Last-Modified': account.updatedAt
-			}).jsonp({
+			setCacheHeaders(account, res);
+			res.jsonp({
 				state: account.getFriendlyState(),
+				icon: getIconUrl(account.state),
 				statusText: account.statusText,
 				createdAt: account.createdAt,
 				updatedAt: account.updatedAt
+			});
+		});
+	});
+	
+	app.get('/:username/icon.png', function(req, res) {
+		var username = req.params.username;
+		db.Account.find({ where: { username: username }}).success(function (account) {
+			// Just display offline if the account doesn't exist
+			var state = account ? account.state : 'offline';
+			
+			setCacheHeaders(account, res);
+			res.sendfile(getIconPath(state), {
+				root: __dirname + '/../public/'
 			});
 		});
 	});

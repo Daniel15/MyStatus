@@ -2,21 +2,6 @@ extends ../layout
 
 block content
 	if !account.username
-		form(action="/account/#{account.accountCode}", method="post")
-			p
-				label(for="username") Choose a username:&nbsp;
-			input(type="text", name="username", id="username", value=account.username)
-
-			input(type="submit", value="Save")
+		include choose-username
 	else
-		p
-		| You're all ready to go!
-		br
-		| Your current status: #{account.getFriendlyState()}
-		if account.statusText
-			|  (#{account.statusText})
-
-		p
-		| Get this data in JSON format by using this URL: #{jsonUrl}
-		br
-		| This can be used with JSONP by appending a "callback" parameter.
+		include registered

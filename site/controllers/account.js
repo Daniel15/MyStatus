@@ -24,7 +24,12 @@ module.exports = function(site) {
 			res.render('account/index', {
 				title: 'Account',
 				account: account,
-				jsonUrl: config.site.baseUrl + account.username + '.json'
+				// TODO: These URLs should probably be built somewhere else!
+				url: {
+					json: config.site.baseUrl + account.username + '.json',
+					jsonp: config.site.baseUrl + account.username + '.json?callback=exampleCallback',
+					icon: config.site.baseUrl + account.username + '/icon.png'
+				}
 			});
 		});
 	});

@@ -37,6 +37,7 @@ site.configure(function(){
 
 	site.use(express.bodyParser());
 	site.use(express.methodOverride());
+	site.use(express.responseTime());
 	site.use(expressValidator);
 	site.use(site.router);
 	site.use(express.static(path.join(__dirname, 'public')));
