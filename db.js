@@ -88,12 +88,15 @@ module.exports = {
 			 * @returns {string} User-friendly state
 			 */
 			getFriendlyState: function() {
+				//noinspection FallthroughInSwitchStatementJS
 				switch (this.state) {
 					case 'online':
+					case 'chat':
 						return 'Online';
 					case 'dnd':
 						return 'Busy';
 					case 'away':
+					case 'xa':
 						return 'Away';
 					case 'offline':
 						return 'Offline';

@@ -1,0 +1,59 @@
+p
+	| You're all ready to go!
+	br
+	| Your current status: 
+	img(src=url.icon)
+	|  #{account.getFriendlyState()}
+	if account.statusText
+		|  (#{account.statusText})
+
+	
+h2 Using it
+p Use any of the following URLs to retrieve your status information.
+
+table(border=1)
+	thead
+		tr
+			th Format
+			th Description
+			th URL
+			th Example
+	tbody
+		tr
+			td Icon
+			td Basic online/busy/offline icon
+			td 
+				a(href=url.icon,target="_blank") #{url.icon}
+			td
+				img(src=url.icon)
+
+h3 For Developers
+
+table(border=1)
+	thead
+		tr
+			th Format
+			th Description
+			th URL
+			th Example
+	tbody
+		tr
+			td JSONP
+			td Status info in JSON with padding, for use in JavaScript
+			td
+				a(href=url.jsonp,target="_blank") #{url.jsonp}
+			td#jsonData(rowspan=2)
+
+		tr
+			td JSON
+			td Status info in JSON format
+			td
+				a(href=url.json,target="_blank") #{url.json}
+
+// TODO: Move this JS elsewhere
+script
+	function exampleCallback(data) {
+		document.getElementById('jsonData').innerHTML = JSON.stringify(data)
+			.replace(/,/g, ',<br />');;
+	}
+script(src=url.jsonp)

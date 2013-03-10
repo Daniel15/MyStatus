@@ -24,8 +24,8 @@ var currentEnv = process.env.NODE_ENV || 'development',
 			baseUrl: null
 		},
 		xmpp: {
-			username: 'example@jabber.org',
-			password: 'changeme'
+			username: 'daniel15test@jabber.org',
+			password: 'dan15test1'
 		},
 		database: {
 			host: 'localhost',
