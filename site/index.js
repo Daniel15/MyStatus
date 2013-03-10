@@ -41,7 +41,7 @@ site.configure(function(){
 	site.use(express.responseTime());
 	site.use(expressValidator);
 	site.use(connectAssets({
-		src: 'site/public'
+		src: path.join(__dirname, 'public')
 	}));
 	site.use(site.router);
 	site.use(express.static(path.join(__dirname, 'public')));
