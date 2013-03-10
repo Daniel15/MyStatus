@@ -11,7 +11,7 @@ p
 h2 Using it
 p Use any of the following URLs to retrieve your status information.
 
-table(border=1)
+table.table.table-striped.table-bordered
 	thead
 		tr
 			th Format
@@ -29,7 +29,7 @@ table(border=1)
 
 h3 For Developers
 
-table(border=1)
+table.table.table-striped.table-bordered
 	thead
 		tr
 			th Format
@@ -42,7 +42,8 @@ table(border=1)
 			td Status info in JSON with padding, for use in JavaScript
 			td
 				a(href=url.jsonp,target="_blank") #{url.jsonp}
-			td#jsonData(rowspan=2)
+			td(rowspan=2)
+				pre#jsonData
 
 		tr
 			td JSON

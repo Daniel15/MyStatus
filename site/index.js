@@ -3,7 +3,8 @@
  */
 'use strict';
 
-var express = require('express'),
+var connectAssets = require('connect-assets'),
+	express = require('express'),
 	expressValidator = require('express-validator'),
 	http = require('http'),
 	path = require('path'),
@@ -39,6 +40,9 @@ site.configure(function(){
 	site.use(express.methodOverride());
 	site.use(express.responseTime());
 	site.use(expressValidator);
+	site.use(connectAssets({
+		src: 'site/public'
+	}));
 	site.use(site.router);
 	site.use(express.static(path.join(__dirname, 'public')));
 });

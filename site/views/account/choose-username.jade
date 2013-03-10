@@ -1,5 +1,5 @@
-form(action="/account/#{account.accountCode}", method="post")
+form.form-inline(action="/account/#{account.accountCode}", method="post")
 	p
 		label(for="username") Choose a username:&nbsp;
 	input(type="text", name="username", id="username", value=account.username)
-	input(type="submit", value="Save")
+	input.btn(type="submit", value="Save")

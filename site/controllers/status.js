@@ -26,7 +26,7 @@ function getIconPath(state) {
 			break;
 	}
 	
-	return 'images/icons/' + icon + '.png';
+	return 'img/icons/' + icon + '.png';
 }
 
 function getIconUrl(state) {
@@ -57,6 +57,7 @@ module.exports = function(app) {
 			setCacheHeaders(account, res);
 			res.jsonp({
 				state: account.getFriendlyState(),
+				rawState: account.state,
 				icon: getIconUrl(account.state),
 				statusText: account.statusText,
 				createdAt: account.createdAt,
