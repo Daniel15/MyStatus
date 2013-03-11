@@ -9,6 +9,22 @@ var util = require('util'),
 	log = require('../../log');
 
 module.exports = function(site) {
+
+	/**
+	 * Renders the "Choose username" page
+	 * @param req     Request
+	 * @param res     Response
+	 * @param account Account
+ 	 * @param errors  Any error messages to display
+	 */
+	function chooseUsername(req, res, account, errors) {
+		res.render('account/choose-username', {
+			title: 'Choose Username',
+			account: account,
+			errors: errors
+		});
+	}
+	
 	/**
 	 * GET for the main account page
 	 */
@@ -16,9 +32,14 @@ module.exports = function(site) {
 		// Check for an account with this account code
 		db.Account.find({ where: { accountCode: req.params.accountCode }}).success(function (account) {
 			if (!account) {
-				log.info('Tried to access non-existent account with account code: ' + req.params.accountCode);
+				log.error('Tried to access non-existent account with account code: ' + req.params.accountCode);
 				res.send(404, 'User not found');
 				return;
+			}
+			
+			// If they haven't chosen a username, get to it!
+			if (!account.username) {
+				return chooseUsername(req, res, account, null);
 			}
 
 			res.render('account/index', {
@@ -42,18 +63,14 @@ module.exports = function(site) {
 			// Ensure this username is not already in use
 			db.Account.find({ where: { username: req.param('username') }}).success(function (existingAccount) {
 				if (existingAccount) {
-					// TODO: Display error message nicely
-					res.send('That username is already taken.');
-					return;
+					return chooseUsername(req, res, account, 'That username is already taken.');
 				}
 
 				account.username = req.param('username');
 				// Validate that the username is valid
 				var errors = account.validate();
 				if (errors) {
-					// TODO: Display error message nicely
-					res.send(errors.username[0]);
-					return;
+					return chooseUsername(req, res, account, errors.username[0]);
 				}
 
 				account.save();

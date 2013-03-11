@@ -49,7 +49,7 @@ module.exports = function(app) {
 		db.Account.find({ where: { username: username }}).success(function (account) {
 			// Ensure it exists
 			if (!account) {
-				log.info('Tried to access non-existent user: ' + username);
+				log.error('Tried to access non-existent user: ' + username);
 				res.jsonp(404, { error: 'User not found' });
 				return;
 			}

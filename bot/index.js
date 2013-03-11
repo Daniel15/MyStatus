@@ -9,18 +9,35 @@ var xmpp = require('simple-xmpp'),
 	db = require('./../db'),
 	log = require('./../log');
 
+/**
+ * Fired when the bot connects to the XMPP server
+ */
 xmpp.on('online', function() {
 	log.info('Connected to XMPP!');
 });
 
+/**
+ * Fired when a chat message is received
+ */
 xmpp.on('chat', function(from, message) {
-	xmpp.send(from, 'Echo: ' + message);
+	log.info('Received from ' + from + ': ' + message);
+	
+	// Resend the registration message
+	db.Account.find({ where: { jid: from }}).success(function (account) {
+		exports.sendRegistrationMessage(from, account.accountCode);	
+	});
 });
 
+/**
+ * Fired when an error occurs
+ */
 xmpp.on('error', function(err) {
 	log.error('Error in XMPP: ', err);
 });
 
+/**
+ * Fired when a contact changes their status
+ */
 xmpp.on('buddy', function(jid, state, statusText) {
 	// Ignore the bot's own status changes
 	if (jid === config.xmpp.username) {
@@ -37,6 +54,9 @@ xmpp.on('buddy', function(jid, state, statusText) {
 	log.info(jid + ' changed state to "' + state + '" (' + statusText + ')');
 });
 
+/**
+ * Fired when a user subscribes to the bot
+ */
 xmpp.on('subscribe', function(from) {
 	// Accept the subscription
 	log.info('Accepting subscribe request from ' + from);

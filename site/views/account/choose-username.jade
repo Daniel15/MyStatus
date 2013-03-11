@@ -1,5 +1,12 @@
-form.form-inline(action="/account/#{account.accountCode}", method="post")
-	p
-		label(for="username") Choose a username:&nbsp;
-	input(type="text", name="username", id="username", value=account.username)
-	input.btn(type="submit", value="Save")
+extends ../layout
+
+block content
+	if errors
+		div.alert.alert-error #{errors}
+			a(href="#", class="close", data-dismiss="alert") &times;
+	
+	form.form-inline(action="/account/#{account.accountCode}", method="post")
+		p
+			label(for="username") Choose a username:&nbsp;
+		input(type="text", name="username", id="username", value=account.username)
+		input.btn(type="submit", value="Save")
