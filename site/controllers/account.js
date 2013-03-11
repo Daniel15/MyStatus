@@ -19,7 +19,7 @@ module.exports = function(site) {
 	 */
 	function chooseUsername(req, res, account, errors) {
 		res.render('account/choose-username', {
-			title: 'Choose Username',
+			title: 'Choose Your Username',
 			account: account,
 			errors: errors
 		});
@@ -43,7 +43,7 @@ module.exports = function(site) {
 			}
 
 			res.render('account/index', {
-				title: 'Account',
+				title: 'Your Account',
 				account: account,
 				// TODO: These URLs should probably be built somewhere else!
 				url: {
