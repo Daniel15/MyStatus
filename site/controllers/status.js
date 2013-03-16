@@ -2,7 +2,8 @@
  * REST controller handling output of the status data.
  */
 'use strict';
-var config = require('../../config'),
+var gm = require('gm'),
+	config = require('../../config'),
 	db = require('../../db'),
 	log = require('../../log');
 
@@ -40,6 +41,21 @@ function setCacheHeaders(account, res) {
 	});
 }
 
+function renderText(text, res) {
+	gm()
+		.font('/usr/share/fonts/truetype/msttcorefonts/Arial.ttf')
+		.background('transparent')
+		.out('label:' + text)
+		.stream('output.png', function (err, stdout, stderr)  {
+			// TODO: Proper error handling
+			if (err) {
+				throw err;
+			}
+
+			stdout.pipe(res);
+		});
+}
+
 module.exports = function(app) {	
 	/**
 	 * JSON feed for the specified user's status.
@@ -65,17 +81,40 @@ module.exports = function(app) {
 			});
 		});
 	});
-	
+
 	app.get('/:username/icon.png', function(req, res) {
-		var username = req.params.username;
-		db.Account.find({ where: { username: username }}).success(function (account) {
+		db.Account.find({ where: { username: req.params.username }}).success(function (account) {
 			// Just display offline if the account doesn't exist
 			var state = account ? account.state : 'offline';
-			
+
 			setCacheHeaders(account, res);
 			res.sendfile(getIconPath(state), {
 				root: __dirname + '/../public/'
 			});
+		});
+	});
+	
+	app.get('/:username/status.png', function(req, res, next) {
+		db.Account.find({ where: { username: req.params.username }}).success(function (account) {
+			// Just display offline if the account doesn't exist
+			var state = account ? account.getFriendlyState() : 'Offline';
+			
+			setCacheHeaders(account, res);
+			renderText(state, res);
+		});
+	});
+
+	app.get('/:username/statustext.png', function(req, res, next) {
+		db.Account.find({ where: { username: req.params.username }}).success(function (account) {
+			// Just display offline if the account doesn't exist
+			var state = account ? account.getFriendlyState() : 'Offline';
+			
+			if (account && account.statusText && account.statusText !== state) {
+				state += ' (' + account.statusText + ')';
+			}
+
+			setCacheHeaders(account, res);
+			renderText(state, res);
 		});
 	});
 };

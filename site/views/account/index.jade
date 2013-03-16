@@ -14,21 +14,24 @@ block content
 	h2 Using it
 	p Use any of the following URLs to retrieve your status information.
 	
-	table.table.table-striped.table-bordered
+	table#statusImages.table.table-striped.table-bordered
 		thead
 			tr
 				th Format
-				th Description
 				th URL
 				th Example
+				th Get the code
 		tbody
-			tr
-				td Icon
-				td Basic online/busy/offline icon
-				td 
-					a(href=url.icon,target="_blank") #{url.icon}
-				td
-					img(src=url.icon)
+			
+			each image in statusImages
+				tr
+					td= image.format
+					td
+						a(href=image.url,target="_blank") #{image.url}
+					td
+						img(src=image.url)
+					td
+						input(type="button", class="btn get-code", value="Get it &rarr;", data-url=image.url)
 	
 	h3 For Developers
 	
@@ -54,10 +57,25 @@ block content
 				td
 					a(href=url.json,target="_blank") #{url.json}
 	
-	// TODO: Move this JS elsewhere
-	script
-		function exampleCallback(data) {
-			document.getElementById('jsonData').innerHTML = JSON.stringify(data)
-				.replace(/,/g, ',<br />');;
-		}
+	#codeModal.modal.hide(tabindex="-1", role="dialog", area-hidden="true", area-labelledby="codeModalLabel")
+		.modal-header
+			button.close(type="button", data-dismiss="modal", area-hidden="true") &times;
+			h3#codeModalLabel Status Image Code
+		.modal-body
+			p Copy and paste the code below to use this status image:
+			form.form-horizontal
+				.control-group
+					label.control-label(for="url") HTML (eg. websites):
+					.controls
+						input.input-xlarge(type="text", id="url", size="50")
+
+				.control-group
+					label.control-label(for="bbcode") BBCode (forums):
+					.controls
+						input.input-xlarge(type="text", id="bbcode", size="50")		
+		
+		.modal-footer
+			button.btn(data-dismiss="modal", area-hidden="true") Close
+
+block extraScripts
 	script(src=url.jsonp)

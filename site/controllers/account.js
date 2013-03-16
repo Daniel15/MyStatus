@@ -41,15 +41,21 @@ module.exports = function(site) {
 			if (!account.username) {
 				return chooseUsername(req, res, account, null);
 			}
+			
+			var usernameBasePath = config.site.baseUrl + account.username;
 
 			res.render('account/index', {
 				title: 'Your Account',
 				account: account,
-				// TODO: These URLs should probably be built somewhere else!
+				
+				statusImages: [
+					{ format: 'Icon', url: usernameBasePath + '/icon.png' },
+					{ format: 'Status', url: usernameBasePath + '/status.png' },
+					{ format: 'Status and status text', url: usernameBasePath + '/statustext.png' }
+				],
 				url: {
-					json: config.site.baseUrl + account.username + '.json',
-					jsonp: config.site.baseUrl + account.username + '.json?callback=exampleCallback',
-					icon: config.site.baseUrl + account.username + '/icon.png'
+					json: usernameBasePath + '.json',
+					jsonp: usernameBasePath + '.json?callback=exampleCallback'
 				}
 			});
 		});
