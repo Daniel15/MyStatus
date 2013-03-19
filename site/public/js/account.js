@@ -6,6 +6,7 @@
 		var url = $(this).data('url');
 		
 		$('#url').val(url);
+		$('#html').val('<img src="' + url + '">');
 		$('#bbcode').val('[img]' + url + '[/img]');
 		$('#codeModal').modal();
 	});
