@@ -10,8 +10,9 @@ var extraClassMethods = {
 	 *
 	 * @param whereProperties Names of the properties to use in the WHERE clause for matching
 	 * @param params Hash of parameters to use in the INSERT or UPDATE
+ 	 * @param errorHandler Function to call when an error occurs
 	 */
-	createOrUpdate: function (whereProperties, params) {
+	createOrUpdate: function (whereProperties, params, errorHandler) {
 		var self = this,
 			where = {};
 
@@ -28,17 +29,18 @@ var extraClassMethods = {
 					// at exactly the same time, after the check above but before the insert (race condition /
 					// threading issue). Just loop around again and re-run the update.
 					if (error.code === 'ER_DUP_ENTRY') {
-						self.createOrUpdate(whereProperties, params);
+						self.createOrUpdate(whereProperties, params, errorHandler);
 						return;
 					}
 					// If it's any other error, just throw it back
-					throw error;
+					if (errorHandler)
+						errorHandler(error);
 				});
 			} else {
 				// Record exists, so just do an update
 				record.updateAttributes(params);
 			}
-		});
+		}).error(errorHandler);
 	}
 };
 

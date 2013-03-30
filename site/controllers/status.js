@@ -56,6 +56,10 @@ function renderText(text, res) {
 		});
 }
 
+function logError(error, username) {
+	log.error('Error retrieving status for ' + username + ': ' + error);
+}
+
 module.exports = function(app) {	
 	/**
 	 * JSON feed for the specified user's status.
@@ -79,18 +83,29 @@ module.exports = function(app) {
 				createdAt: account.createdAt,
 				updatedAt: account.updatedAt
 			});
+		}).error(function (error) {
+			logError(error, username);
+			res.jsonp(500, { error: 'Could not retrieve status: ' + error });
 		});
 	});
 
 	app.get('/:username/icon.png', function(req, res) {
-		db.Account.find({ where: { username: req.params.username }}).success(function (account) {
-			// Just display offline if the account doesn't exist
-			var state = account ? account.state : 'offline';
-
+		
+		function sendIcon(account, state) {
 			setCacheHeaders(account, res);
 			res.sendfile(getIconPath(state), {
 				root: __dirname + '/../public/'
 			});
+		}
+		
+		db.Account.find({ where: { username: req.params.username }}).success(function (account) {
+			// Just display offline if the account doesn't exist
+			var state = account ? account.state : 'offline';
+			sendIcon(account, state);
+		}).error(function (error) {
+			logError(error, req.params.username);
+			// Just display offline if there was a database error
+			sendIcon(null, 'offline');
 		});
 	});
 	
@@ -101,6 +116,10 @@ module.exports = function(app) {
 			
 			setCacheHeaders(account, res);
 			renderText(state, res);
+		}).error(function (error) {
+			logError(error, req.params.username);
+			// Just display offline if there was a database error
+			renderText('Offline', res);
 		});
 	});
 
@@ -115,6 +134,10 @@ module.exports = function(app) {
 
 			setCacheHeaders(account, res);
 			renderText(state, res);
+		}).error(function (error) {
+			logError(error, req.params.username);
+			// Just display offline if there was a database error
+			renderText('Offline', res);
 		});
 	});
 };

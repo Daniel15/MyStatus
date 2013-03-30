@@ -25,6 +25,8 @@ xmpp.on('chat', function(from, message) {
 	// Resend the registration message
 	db.Account.find({ where: { jid: from }}).success(function (account) {
 		exports.sendRegistrationMessage(from, account.accountCode);	
+	}).error(function (error) {
+		log.error('Could not send reg message to ' + from + ': ' + error);
 	});
 });
 
@@ -49,10 +51,16 @@ xmpp.on('buddy', function(jid, state, statusText) {
 		jid: jid,
 		state: state,
 		statusText: statusText
+	}, function (error) {
+		log.error('Could not persist changes for ' + jid + ': ' + error);
 	});
 
 	log.info(jid + ' changed state to "' + state + '" (' + statusText + ')');
 });
+
+/*xmpp.on('buddyCapabilities', function (jid, info) {
+	console.log(jid, info);
+})*/
 
 /**
  * Fired when a user subscribes to the bot
