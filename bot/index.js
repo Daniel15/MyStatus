@@ -92,6 +92,13 @@ bot.use(junction.presence(function(handler) {
 		bot.connection.send(new junction.elements.Presence(jid, 'subscribe'));
 		exports.sendRegistrationMessage(jid);
 	});
+
+	/**
+	 * Fired when an error is received in a presence stanza
+	 */
+	handler.on('err', function(stanza) {
+		log.error('Error in presence stanza: ' + stanza.toString());	
+	});
 }));
 
 bot.use(junction.serviceUnavailable());
