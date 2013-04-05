@@ -1,4 +1,4 @@
-MyStatus
+MyStatus [![Build Status](https://travis-ci.org/Daniel15/MyStatus.png?branch=master)](https://travis-ci.org/Daniel15/MyStatus) ![](https://david-dm.org/Daniel15/MyStatus.png)
 ========
 MyStatus is a simple web web service that allows you to retrieve your curret Jabber/XMPP/GTalk 
 status. 
