@@ -3,90 +3,125 @@
  */
 'use strict';
 
-var xmpp = require('simple-xmpp'),
+var junction = require('junction'),
 	crypto = require('crypto'),
 	config = require('./../config'),
 	db = require('./../db'),
 	log = require('./../log');
 
-/**
- * Fired when the bot connects to the XMPP server
- */
-xmpp.on('online', function() {
-	log.info('Connected to XMPP!');
+var bot = junction();
+
+// Logging of incoming/outgoing messages
+bot.use(function(stanza, next) {
+	log.debug('RECV: ' + stanza);
+	next();
+});
+bot.filter(function(stanza, next) {
+	log.debug('XMIT: ' + stanza);
+	next();
 });
 
-/**
- * Fired when a chat message is received
- */
-xmpp.on('chat', function(from, message) {
-	log.info('Received from ' + from + ': ' + message);
-	
-	// Resend the registration message
-	db.Account.find({ where: { jid: from }}).success(function (account) {
-		exports.sendRegistrationMessage(from, account.accountCode);	
-	}).error(function (error) {
-		log.error('Could not send reg message to ' + from + ': ' + error);
+bot.use(junction.messageParser());
+bot.use(junction.message(function(handler) {
+	/**
+	 * Fired when a chat message is received
+	 */
+	handler.on('chat', function(stanza) {
+		// Ignore if it's not actually a chat message
+		if (!stanza.body) {
+			return;
+		}
+
+		var jid = new junction.JID(stanza.from).bare().toString();
+		log.info('Received from ' + jid + ': ' + stanza.body);
+
+		// Resend the registration message
+		db.Account.find({ where: { jid: jid }}).success(function (account) {
+			exports.sendRegistrationMessage(jid, account.accountCode);
+		}).error(function (error) {
+				log.error('Could not send reg message to ' + jid + ': ' + error);
+			});
 	});
-});
+}));
 
-/**
- * Fired when an error occurs
- */
-xmpp.on('error', function(err) {
-	log.error('Error in XMPP: ', err);
-});
+bot.use(junction.presenceParser());
+bot.use(junction.presence(function(handler) {
+	/**
+	 * Persist this status to the database
+	 * @param stanza Stanza to persist
+	 */
+	function persistStatus(stanza) {
+		var jid = new junction.JID(stanza.from).bare().toString();
 
-/**
- * Fired when a contact changes their status
- */
-xmpp.on('buddy', function(jid, state, statusText) {
-	// Ignore the bot's own status changes
-	if (jid === config.xmpp.username) {
-		return;
+		// Persist this change to the database
+		db.Account.createOrUpdate(['jid'], {
+			jid: jid,
+			state: stanza.show,
+			statusText: stanza.status
+		}, function (error) {
+			log.error('Could not persist changes for ' + jid + ': ' + error);
+		});
+
+		log.info(jid + ' changed state to "' + stanza.show + '" (' + stanza.status + ')');
 	}
 
-	// Persist this change to the database
-	db.Account.createOrUpdate(['jid'], {
-		jid: jid,
-		state: state,
-		statusText: statusText
-	}, function (error) {
-		log.error('Could not persist changes for ' + jid + ': ' + error);
+	/**
+	 * Fired when a contact changes their status
+	 */
+	handler.on('available', function(stanza) {
+		persistStatus(stanza);
+
+	});
+	/**
+	 * Fired when a contact goes offline
+	 */
+	handler.on('unavailable', function(stanza) {
+		stanza.show = 'offline';
+		stanza.status = null;
+		persistStatus(stanza);
 	});
 
-	log.info(jid + ' changed state to "' + state + '" (' + statusText + ')');
-});
+	/**
+	 * Fired when a user subscribes to the bot
+	 */
+	handler.on('subscribe', function(stanza) {
+		var jid = new junction.JID(stanza.from).bare().toString();
+		// Accept the subscription
+		log.info('Accepting subscribe request from ' + jid);
+		bot.connection.send(new junction.elements.Presence(jid, 'subscribed'));
+		bot.connection.send(new junction.elements.Presence(jid, 'subscribe'));
+		exports.sendRegistrationMessage(jid);
+	});
+}));
 
-/*xmpp.on('buddyCapabilities', function (jid, info) {
-	console.log(jid, info);
-})*/
-
-/**
- * Fired when a user subscribes to the bot
- */
-xmpp.on('subscribe', function(from) {
-	// Accept the subscription
-	log.info('Accepting subscribe request from ' + from);
-	xmpp.acceptSubscription(from);
-	xmpp.subscribe(from);
-
-	exports.sendRegistrationMessage(from);
-});
+bot.use(junction.serviceUnavailable());
+bot.use(junction.errorHandler({ dumpExceptions: true }));
 
 /**
  * Starts the XMPP bot.
  */
 exports.start = function() {
 	log.info('Connecting using ' + config.xmpp.username);
-	xmpp.connect({
+	bot.connect({
+		type: 'client',
 		jid: config.xmpp.username,
 		password: config.xmpp.password,
 		reconnect: true
-	});
+	}).on('online', function() {
+		this.send(new junction.elements.Presence());
+		log.info('Connected to XMPP!');
 
-	// check for incoming subscription requests
-	xmpp.getRoster();
+		// Check for incoming subscription requests
+		var roster = new junction.elements.IQ(null, 'get');
+		roster.c('query', { xmlns: 'jabber:iq:roster' });
+		bot.connection.send(roster);
+
+		// Send a whitespace keepalive every 30 seconds.
+		// TODO: Is there somewhere more appropriate for this?
+		setInterval(function() {
+			bot.connection.send(' ');
+		}, 30 * 1000);
+	});
 };
 
 /**
@@ -94,7 +129,7 @@ exports.start = function() {
  * @param jid Jabber ID of the user
  * @param accountCode Account code for accessing their account
  */
-exports.sendRegistrationMessage = function(jid, accountCode) {
+ exports.sendRegistrationMessage = function(jid, accountCode) {
 	// Generate an account code for verification
 	crypto.randomBytes(28, function(ex, buf) {
 		// Only replace the account code if we didn't already have one
@@ -107,15 +142,8 @@ exports.sendRegistrationMessage = function(jid, accountCode) {
 		}
 
 		log.info('Sending registration message to ' + jid);
-		xmpp.send(jid, 'Please go to this URL to complete your MyStatus registration: ' + config.site.baseUrl + 'account/' + accountCode);
+		var msg = new junction.elements.Message(jid);
+		msg.c('body', {}).t('Please go to this URL to complete your MyStatus registration: ' + config.site.baseUrl + 'account/' + accountCode);
+		bot.connection.send(msg);
 	});
-};
-
-/**
- * Add the specified Jabber ID as a contact
- * @param jid Jabber ID
- */
-exports.addContact = function(jid) {
-	log.info('Adding ' + jid + ' as contact');
-	xmpp.subscribe(jid);
 };

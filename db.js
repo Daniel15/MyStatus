@@ -40,7 +40,7 @@ var extraClassMethods = {
 				// Record exists, so just do an update
 				record.updateAttributes(params);
 			}
-		}).error(errorHandler);
+		}).error(errorHandler || function(error) { throw error; });
 	}
 };
 
