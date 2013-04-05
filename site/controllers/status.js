@@ -52,6 +52,7 @@ function renderText(text, res) {
 				throw err;
 			}
 
+			res.set('Content-Type', 'image/png');
 			stdout.pipe(res);
 		});
 }
