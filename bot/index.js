@@ -39,8 +39,8 @@ bot.use(junction.message(function(handler) {
 		db.Account.find({ where: { jid: jid }}).success(function (account) {
 			exports.sendRegistrationMessage(jid, account.accountCode);
 		}).error(function (error) {
-				log.error('Could not send reg message to ' + jid + ': ' + error);
-			});
+			log.error('Could not send reg message to ' + jid + ': ' + error);
+		});
 	});
 }));
 
@@ -98,6 +98,25 @@ bot.use(junction.presence(function(handler) {
 	 */
 	handler.on('err', function(stanza) {
 		log.error('Error in presence stanza: ' + stanza.toString());	
+	});
+}));
+
+bot.use(junction.capabilitiesParser());
+bot.use(junction.capabilities(function(handler) {
+	/**
+	 * Called when the user's capabilities have been retrieved.
+	 */
+	handler.on('capabilities', function(rawJid, caps) {
+		var jid = new junction.JID(rawJid).bare().toString(),
+			features = caps.features;
+
+		db.Account.find({ where: { jid: jid }}).success(function (account) {
+			account.setFeature('video', features.googleVideo || features.rtpvideo);
+			account.setFeature('voice', features.googleVoice || features.rtpaudio);
+			account.save(['features']);
+		}).error(function (error) {
+			log.error('Could not persist capabilities for ' + jid + ': ' + error);
+		});
 	});
 }));
 

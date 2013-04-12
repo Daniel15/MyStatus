@@ -81,6 +81,7 @@ module.exports = function(app) {
 				rawState: account.state,
 				icon: getIconUrl(account.state),
 				statusText: account.statusText,
+				features: account.getAllFeatures(),
 				createdAt: account.createdAt,
 				updatedAt: account.updatedAt
 			});

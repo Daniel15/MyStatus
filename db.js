@@ -14,7 +14,8 @@ var extraClassMethods = {
 	 */
 	createOrUpdate: function (whereProperties, params, errorHandler) {
 		var self = this,
-			where = {};
+			where = {},
+			paramsToUpdate = [];
 
 		whereProperties.forEach(function (key) {
 			where[key] = params[key];
@@ -38,7 +39,13 @@ var extraClassMethods = {
 				});
 			} else {
 				// Record exists, so just do an update
-				record.updateAttributes(params);
+				// Get names of all the parameters that are being updated
+				for (var i in params) {
+					if (params.hasOwnProperty(i) && !where[i]) {
+						paramsToUpdate.push(i);
+					}
+				}
+				record.updateAttributes(params, paramsToUpdate);
 			}
 		}).error(errorHandler || function(error) { throw error; });
 	}
@@ -82,9 +89,55 @@ module.exports = {
 		},
 		state: Sequelize.STRING,
 		statusText: Sequelize.STRING,
-		accountCode: Sequelize.STRING
+		accountCode: Sequelize.STRING,
+		features: Sequelize.INTEGER
 	}, {
 		instanceMethods: {
+			_featureBits: {
+				video: 1,
+				voice: 2
+			},
+
+			/**
+			 * Check whether a certain feature is set for this user
+			 * @param featureName Name of the feature
+			 * @returns {Boolean}
+			 */
+			hasFeature: function(featureName) {
+				var featureBit = this._featureBits[featureName];
+				//noinspection JSHint
+				return (this.features & featureBit) === featureBit;
+			},
+			
+			getAllFeatures: function() {
+				var features = {};
+				
+				for (var featureName in this._featureBits) {
+					if (this._featureBits.hasOwnProperty(featureName)) {
+						features[featureName] = this.hasFeature(featureName);
+					}
+				}
+				
+				return features;
+			},
+
+			/**
+			 * Sets the value of the specified feature
+			 * @param featureName Name of the feature to set
+			 * @param value True or false
+			 */
+			setFeature: function(featureName, value) {
+				var featureBit = this._featureBits[featureName];
+				
+				if (value) {
+					//noinspection JSHint
+					this.features |= featureBit;
+				} else {
+					//noinspection JSHint
+					this.feature &= ~featureBit;
+				}
+			},
+			
 			/**
 			 * Gets a user-friendly version of the state (eg. Online or Busy)
 			 * @returns {string} User-friendly state
