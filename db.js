@@ -90,7 +90,12 @@ module.exports = {
 		state: Sequelize.STRING,
 		statusText: Sequelize.STRING,
 		accountCode: Sequelize.STRING,
-		features: Sequelize.INTEGER
+		features: {
+			type: Sequelize.INTEGER,
+			allowNull: false,
+			defaultValue: 0
+			
+		} 
 	}, {
 		instanceMethods: {
 			_featureBits: {

@@ -11,7 +11,7 @@
 		"express-validator": "0.3.0",
 		"gm": "*",
 		"jade": "0.28.2",
-		"junction": "git+https://github.com/Daniel15/node-junction.git#6079d8ae61",
+		"junction": "git+https://github.com/Daniel15/node-junction.git#2718ccd8cd",
 		"less": "1.3.3",
 		"mysql": "2.0.0-alpha7",
 		"sequelize": "1.6.0",
