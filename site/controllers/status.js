@@ -9,7 +9,15 @@ var gm = require('gm'),
 
 var cacheMins = 1;
 
-function getIconPath(state) {
+/**
+ * Get the path to the icon for the specified state. Normalises the state (eg. both "online" and "chat" appear as the 
+ * online icon)
+ * 
+ * @param state State to get icon for
+ * @param suffix Suffix for icon file (eg. "blah" will use "online-blah", "busy-blah" and "offline-blah")
+ * @returns {string} Path to the icon file
+ */
+function getIconPath(state, suffix) {
 	var icon = 'offline';
 
 	//noinspection FallthroughInSwitchStatementJS
@@ -27,13 +35,49 @@ function getIconPath(state) {
 			break;
 	}
 	
+	if (suffix) {
+		icon += '-' + suffix;
+	}
+	
 	return 'img/icons/' + icon + '.png';
 }
 
+/**
+ * Gets the full absolute URL to the specified state icon
+ * 
+ * @param state State to get icon for
+ * @returns {string} Full URL to the icon
+ */
 function getIconUrl(state) {
 	return config.site.baseUrl + getIconPath(state);
 }
 
+/**
+ * Gets the full absolute URL to the specified feature state icon
+ * 
+ * @param account Account to get icon for
+ * @param feature Feature to check for
+ * @param iconSuffix Suffix to use on icon filename
+ * @returns {string} Full URL to the icon
+ */
+function getFeatureIconUrl(account, feature, iconSuffix) {
+	var state = account.state,
+		supportsFeature = account.hasFeature(feature);
+
+	// Always show as offline if the user's client doesn't support this feature
+	if (!supportsFeature) {
+		state = 'offline';
+	}
+	
+	return config.site.baseUrl + getIconPath(state, iconSuffix);
+}
+
+/**
+ * Set the caching headers for this response
+ * 
+ * @param account Account to set caching headers based off
+ * @param res Result
+ */
 function setCacheHeaders(account, res) {
 	res.set({
 		'Last-Modified': account ? account.updatedAt : new Date(),
@@ -41,6 +85,27 @@ function setCacheHeaders(account, res) {
 	});
 }
 
+/**
+ * Send the icon for the specified state
+ * 
+ * @param account Account to send icon for
+ * @param state State to send icon for
+ * @param res Result
+ * @param iconSuffix Suffix to use on icon filename
+ */
+function sendIcon(account, state, res, iconSuffix) {
+	setCacheHeaders(account, res);
+	res.sendfile(getIconPath(state, iconSuffix), {
+		root: __dirname + '/../public/'
+	});
+}
+
+/**
+ * Renders the specified text to the result
+ * 
+ * @param text Text to render
+ * @param res Result
+ */
 function renderText(text, res) {
 	gm()
 		.font('/usr/share/fonts/truetype/msttcorefonts/Arial.ttf')
@@ -57,6 +122,12 @@ function renderText(text, res) {
 		});
 }
 
+/**
+ * Log an error that occured while retrieving a status
+ * 
+ * @param error Error to log
+ * @param username Username that caused the error
+ */
 function logError(error, username) {
 	log.error('Error retrieving status for ' + username + ': ' + error);
 }
@@ -80,6 +151,11 @@ module.exports = function(app) {
 				state: account.getFriendlyState(),
 				rawState: account.state,
 				icon: getIconUrl(account.state),
+				icons: {
+					status: getIconUrl(account.state),
+					video: getFeatureIconUrl(account, 'video', 'video'),
+					voice: getFeatureIconUrl(account, 'voice', 'voice')
+				},
 				statusText: account.statusText,
 				features: account.getAllFeatures(),
 				createdAt: account.createdAt,
@@ -90,25 +166,54 @@ module.exports = function(app) {
 			res.jsonp(500, { error: 'Could not retrieve status: ' + error });
 		});
 	});
+	
+	// TODO: Clean up the copypasta (db.Account.find(....)) below!
 
-	app.get('/:username/icon.png', function(req, res) {
-		
-		function sendIcon(account, state) {
-			setCacheHeaders(account, res);
-			res.sendfile(getIconPath(state), {
-				root: __dirname + '/../public/'
-			});
-		}
-		
+	app.get('/:username/icon.png', function(req, res) {		
 		db.Account.find({ where: { username: req.params.username }}).success(function (account) {
 			// Just display offline if the account doesn't exist
 			var state = account ? account.state : 'offline';
-			sendIcon(account, state);
+			sendIcon(account, state, res);
 		}).error(function (error) {
 			logError(error, req.params.username);
 			// Just display offline if there was a database error
-			sendIcon(null, 'offline');
+			sendIcon(null, 'offline', res);
 		});
+	});
+
+	/**
+	 * Load the user's account and send a relevant icon for the specified feature
+	 * 
+	 * @param req Request
+	 * @param res Response
+	 * @param feature Feature to get icon for
+	 * @param iconSuffix Suffix to use on icon filename
+	 */
+	function featureIcon(req, res, feature, iconSuffix) {
+		db.Account.find({ where: { username: req.params.username }}).success(function (account) {
+			// Just display offline if the account doesn't exist
+			var state = account ? account.state : 'offline',
+				supportsFeature = account ? account.hasFeature(feature) : false;
+	
+			// Always show as offline if the user's client doesn't support this feature
+			if (!supportsFeature) {
+				state = 'offline';
+			}
+	
+			sendIcon(account, state, res, iconSuffix);
+		}).error(function (error) {
+			logError(error, req.params.username);
+			// Just display offline if there was a database error
+			sendIcon(null, 'offline', res, iconSuffix);
+		});
+	}
+
+	app.get('/:username/video.png', function(req, res) {
+		return featureIcon(req, res, 'video', 'video');
+	});
+
+	app.get('/:username/voice.png', function(req, res) {
+		return featureIcon(req, res, 'voice', 'voice');
 	});
 	
 	app.get('/:username/status.png', function(req, res, next) {

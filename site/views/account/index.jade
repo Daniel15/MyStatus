@@ -25,7 +25,11 @@ block content
 			
 			each image in statusImages
 				tr
-					td= image.format
+					td 
+						| #{image.format}
+						if image.desc
+							br
+							small #{image.desc}
 					td
 						a(href=image.url,target="_blank") #{image.url}
 					td

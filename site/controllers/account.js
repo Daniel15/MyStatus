@@ -51,7 +51,9 @@ module.exports = function(site) {
 				statusImages: [
 					{ format: 'Icon', url: usernameBasePath + '/icon.png' },
 					{ format: 'Status', url: usernameBasePath + '/status.png' },
-					{ format: 'Status and status text', url: usernameBasePath + '/statustext.png' }
+					{ format: 'Status and status text', url: usernameBasePath + '/statustext.png' },
+					{ format: 'Video icon', desc: 'Shows whether your chat client supports video chat', url: usernameBasePath + '/video.png' },
+					{ format: 'Voice icon', desc: 'Shows whether your chat client supports voice chat', url: usernameBasePath + '/voice.png' }
 				],
 				url: {
 					json: usernameBasePath + '.json',
