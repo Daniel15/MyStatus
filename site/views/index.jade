@@ -18,3 +18,21 @@ block content
 		strong #{botJid} 
 		| to your Jabber or Google Talk contacts. You will receive a chat message with a link to complete the registration.
 		| If you use Gmail, see the screenshot to the right.
+		
+	h1(style="clear: both") 
+		a(href="http://dan.cx/blog/category/mystatus") News
+	div#news Loading...
+		
+	script#news-template(type="text/x-handlebars-template")
+		{{#each entries}}
+		article
+			h3 
+				a(href="{{url}}") {{title}}
+			small 
+				{{date}} | 
+				a(href="{{url}}#disqus_thread") View comments
+			div {{{content}}}
+		{{/each}}
+	
+block extraScripts
+	script(src="//ajax.googleapis.com/ajax/services/feed/load?v=1.0&q=http://dan.cx/blog/category/mystatus.rss&callback=Pages.Index.newsCallback")
