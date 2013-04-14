@@ -57,7 +57,8 @@ module.exports = function(site) {
 				],
 				url: {
 					json: usernameBasePath + '.json',
-					jsonp: usernameBasePath + '.json?callback=exampleCallback'
+					jsonp: usernameBasePath + '.json?callback=exampleCallback',
+					jsonExample: '/' + account.username + '.json?callback=Pages.Account.jsonCallback'
 				}
 			});
 		});
