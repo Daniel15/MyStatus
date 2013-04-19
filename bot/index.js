@@ -4,6 +4,8 @@
 'use strict';
 
 var junction = require('junction'),
+	capabilities = require('junction-caps').capabilities,
+	capabilitiesParser = require('junction-caps').capabilitiesParser,
 	crypto = require('crypto'),
 	config = require('./../config'),
 	db = require('./../db'),
@@ -101,8 +103,8 @@ bot.use(junction.presence(function(handler) {
 	});
 }));
 
-bot.use(junction.capabilitiesParser());
-bot.use(junction.capabilities(function(handler) {
+bot.use(capabilitiesParser());
+bot.use(capabilities(function(handler) {
 	/**
 	 * Called when the user's capabilities have been retrieved.
 	 */
